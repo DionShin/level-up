@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0a0a0c;
+  --card: #0f1117;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 480px;
+  margin: 0 auto;
+  background: #0a0a0c;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 스크롤바 숨김 (모바일 앱처럼) */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* 하단 네비게이션 여백 */
+.page-wrapper {
+  padding-bottom: 80px;
+}

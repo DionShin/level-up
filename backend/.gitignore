@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+
+# DB (로컬 SQLite)
+*.db
+*.db-shm
+*.db-wal
+
+# VAPID 키 파일
+vapid_private.pem
+vapid_public.pem
+
+# misc
+.DS_Store
