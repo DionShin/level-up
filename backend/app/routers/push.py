@@ -108,7 +108,7 @@ async def send_test_push(
     sent = 0
     for sub in subs:
         subscription_info = {"endpoint": sub.endpoint, "keys": json.loads(sub.keys)}
-        ok = send_push(subscription_info, "Level-Up 테스트", "푸시 알림이 정상 작동합니다!", "/")
+        ok = send_push(subscription_info, "Axis 테스트", "푸시 알림이 정상 작동합니다!", "/")
         if ok:
             sent += 1
 

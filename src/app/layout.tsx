@@ -4,7 +4,7 @@ import BottomNav from '@/components/BottomNav';
 import Providers from './providers';
 
 export const metadata: Metadata = {
-  title: 'Level-Up',
+  title: 'Axis',
   description: '2030 남성을 위한 자기관리 앱',
   manifest: '/manifest.json',
 };

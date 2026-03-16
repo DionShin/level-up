@@ -12,12 +12,24 @@ class Settings(BaseSettings):
     VAPID_PRIVATE_KEY: str = "YOUR_VAPID_PRIVATE_KEY"
     VAPID_EMAIL: str = "mailto:admin@levelup.app"
 
-    # NewsAPI (https://newsapi.org — 무료 플랜으로 하루 100건)
-    NEWS_API_KEY: str = "YOUR_NEWS_API_KEY"
+    # 네이버 개발자 API (https://developers.naver.com — 무료)
+    NAVER_CLIENT_ID: str = "YOUR_NAVER_CLIENT_ID"
+    NAVER_CLIENT_SECRET: str = "YOUR_NAVER_CLIENT_SECRET"
+
+    # YouTube Data API v3 (https://console.cloud.google.com — 무료 10,000 units/day)
+    YOUTUBE_API_KEY: str = "YOUR_YOUTUBE_API_KEY"
 
     @property
-    def news_api_key(self) -> str:
-        return self.NEWS_API_KEY
+    def naver_client_id(self) -> str:
+        return self.NAVER_CLIENT_ID
+
+    @property
+    def naver_client_secret(self) -> str:
+        return self.NAVER_CLIENT_SECRET
+
+    @property
+    def youtube_api_key(self) -> str:
+        return self.YOUTUBE_API_KEY
 
     @property
     def vapid_public_key(self) -> str:

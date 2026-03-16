@@ -86,7 +86,7 @@ export const communityAPI = {
 
 // ─── News API ─────────────────────────────────────────────────────
 export const newsAPI = {
-  getAll: (category?: 'economy' | 'knowledge', pageSize = 10) =>
+  getAll: (category?: 'economy' | 'knowledge' | 'shorts' | 'all', pageSize = 10) =>
     fetchAPI<NewsArticle[]>(`/news/?page_size=${pageSize}${category ? `&category=${category}` : ''}`),
 };
 
@@ -174,6 +174,7 @@ export interface NewsArticle {
   source: string;
   published_at: string;
   category: string;
+  thumbnail?: string;
 }
 
 // 요청 타입

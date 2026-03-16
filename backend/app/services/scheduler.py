@@ -49,7 +49,7 @@ async def _send_morning_news_push():
         headline = "오늘의 루틴을 시작해 보세요!"
 
     body = f"[오늘의 인사이트] {headline}"
-    await _send_daily_reminders("07:30", "Level-Up 모닝 브리핑", body, "/news")
+    await _send_daily_reminders("07:30", "Axis 모닝 브리핑", body, "/news")
 
 
 def start_scheduler():

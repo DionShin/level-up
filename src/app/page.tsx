@@ -1,15 +1,116 @@
 'use client';
 
-import { Bell, ChevronRight, Flame, TrendingUp, BookOpen, ExternalLink } from 'lucide-react';
+import { Bell, ChevronRight, Flame, TrendingUp, BookOpen, ExternalLink, Play } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import StatRadarChart from '@/components/StatRadarChart';
-import { statsAPI, routinesAPI, newsAPI, type StatResponse, type RoutineResponse } from '@/lib/api';
+import { statsAPI, routinesAPI, newsAPI, type StatResponse, type NewsArticle } from '@/lib/api';
 
 // API 응답을 StatRadarChart가 기대하는 형태로 변환
 function toChartStat(s: StatResponse) {
   return { id: s.id, name: s.name, icon: s.icon, color: s.color, score: s.score };
 }
 
+// ─── 뉴스 카드 (economy / knowledge) ─────────────────────────────
+function NewsCard({ article }: { article: NewsArticle }) {
+  const isYouTube = article.source === 'YouTube';
+  const isEconomy = article.category === 'economy';
+
+  return (
+    <a
+      href={article.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block rounded-2xl overflow-hidden transition-all active:scale-[0.98]"
+      style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.05)' }}
+    >
+      {/* YouTube 썸네일 */}
+      {article.thumbnail && (
+        <img
+          src={article.thumbnail}
+          alt={article.title}
+          className="w-full h-32 object-cover rounded-xl"
+        />
+      )}
+
+      <div className="flex items-start gap-3 p-4">
+        {/* 카테고리/소스 아이콘 */}
+        <div
+          className="rounded-xl p-2 mt-0.5 shrink-0"
+          style={{
+            background: isYouTube
+              ? 'rgba(239,68,68,0.12)'
+              : isEconomy
+              ? 'rgba(34,197,94,0.1)'
+              : 'rgba(168,85,247,0.1)',
+          }}
+        >
+          {isYouTube ? (
+            <Play size={14} className="text-red-500" fill="currentColor" />
+          ) : isEconomy ? (
+            <TrendingUp size={14} className="text-green-400" />
+          ) : (
+            <BookOpen size={14} className="text-purple-400" />
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p
+            className="text-xs mb-0.5"
+            style={{ color: isYouTube ? '#ef4444' : '#6b7280' }}
+          >
+            {article.source}
+          </p>
+          <p className="text-sm font-medium leading-snug line-clamp-2">{article.title}</p>
+        </div>
+
+        <ExternalLink size={13} className="text-gray-700 shrink-0 mt-1" />
+      </div>
+    </a>
+  );
+}
+
+// ─── 쇼츠 카드 (가로 스크롤용) ────────────────────────────────────
+function ShortsCard({ article }: { article: NewsArticle }) {
+  return (
+    <a
+      href={article.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex-shrink-0 w-36 rounded-2xl overflow-hidden transition-all active:scale-[0.97]"
+      style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.05)' }}
+    >
+      {/* 썸네일 or 플레이스홀더 */}
+      {article.thumbnail ? (
+        <div className="relative">
+          <img
+            src={article.thumbnail}
+            alt={article.title}
+            className="w-full h-24 object-cover"
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="rounded-full p-1.5" style={{ background: 'rgba(0,0,0,0.55)' }}>
+              <Play size={14} className="text-white" fill="currentColor" />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div
+          className="w-full h-24 flex items-center justify-center"
+          style={{ background: 'rgba(239,68,68,0.08)' }}
+        >
+          <Play size={20} className="text-red-500" fill="currentColor" />
+        </div>
+      )}
+
+      <div className="p-2.5">
+        <p className="text-[10px] text-red-500 mb-0.5">{article.source}</p>
+        <p className="text-xs font-medium leading-snug line-clamp-3">{article.title}</p>
+      </div>
+    </a>
+  );
+}
+
+// ─── 메인 대시보드 ────────────────────────────────────────────────
 export default function Dashboard() {
   const { data: stats = [], isLoading: statsLoading } = useQuery({
     queryKey: ['stats'],
@@ -21,10 +122,22 @@ export default function Dashboard() {
     queryFn: routinesAPI.getToday,
   });
 
-  const { data: news = [] } = useQuery({
-    queryKey: ['news'],
-    queryFn: () => newsAPI.getAll(undefined, 3),
-    staleTime: 10 * 60 * 1000, // 10분 캐시 (뉴스는 자주 안 바뀜)
+  const { data: economyNews = [] } = useQuery({
+    queryKey: ['news', 'economy'],
+    queryFn: () => newsAPI.getAll('economy', 3),
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const { data: knowledgeNews = [] } = useQuery({
+    queryKey: ['news', 'knowledge'],
+    queryFn: () => newsAPI.getAll('knowledge', 3),
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const { data: shorts = [] } = useQuery({
+    queryKey: ['news', 'shorts'],
+    queryFn: () => newsAPI.getAll('shorts', 4),
+    staleTime: 10 * 60 * 1000,
   });
 
   const avgScore = stats.length
@@ -144,42 +257,46 @@ export default function Dashboard() {
         )}
       </section>
 
-      {/* 경제/지식 패스 — 뉴스 카드 */}
-      {news.length > 0 && (
-        <section className="pb-24">
+      {/* ① 오늘의 경제 인사이트 */}
+      {economyNews.length > 0 && (
+        <section className="pb-6">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-300">오늘의 인사이트</h3>
-            <span className="text-xs text-gray-600">자동 큐레이션</span>
+            <h3 className="text-sm font-semibold text-gray-300">오늘의 경제 인사이트</h3>
+            <span className="text-xs text-gray-600">네이버뉴스 · YouTube</span>
           </div>
           <div className="space-y-2.5">
-            {news.map((article, i) => (
-              <a
-                key={i}
-                href={article.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-start gap-3 p-4 rounded-2xl transition-all active:scale-[0.98] block"
-                style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.05)' }}
-              >
-                {/* 카테고리 아이콘 */}
-                <div
-                  className="rounded-xl p-2 mt-0.5 shrink-0"
-                  style={{
-                    background: article.category === 'economy'
-                      ? 'rgba(34,197,94,0.1)' : 'rgba(168,85,247,0.1)',
-                  }}
-                >
-                  {article.category === 'economy'
-                    ? <TrendingUp size={14} className="text-green-400" />
-                    : <BookOpen size={14} className="text-purple-400" />
-                  }
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-500 mb-0.5">{article.source}</p>
-                  <p className="text-sm font-medium leading-snug line-clamp-2">{article.title}</p>
-                </div>
-                <ExternalLink size={13} className="text-gray-700 shrink-0 mt-1" />
-              </a>
+            {economyNews.map((article, i) => (
+              <NewsCard key={`economy-${i}`} article={article} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ② 자기계발 콘텐츠 */}
+      {knowledgeNews.length > 0 && (
+        <section className="pb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-300">자기계발 콘텐츠</h3>
+            <span className="text-xs text-gray-600">네이버블로그 · YouTube</span>
+          </div>
+          <div className="space-y-2.5">
+            {knowledgeNews.map((article, i) => (
+              <NewsCard key={`knowledge-${i}`} article={article} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ③ 쇼츠 · 릴스 — 가로 스크롤 */}
+      {shorts.length > 0 && (
+        <section className="pb-24">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-300">쇼츠 · 릴스</h3>
+            <span className="text-xs text-red-500">YouTube Shorts</span>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {shorts.map((article, i) => (
+              <ShortsCard key={`shorts-${i}`} article={article} />
             ))}
           </div>
         </section>

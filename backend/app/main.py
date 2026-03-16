@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Level-Up API",
+    title="Axis API",
     description="2030 남성 자기관리 앱 백엔드",
     version="0.1.0",
     lifespan=lifespan,
@@ -57,7 +57,7 @@ app.include_router(news.router,       prefix="/api")
 
 @app.get("/")
 async def root():
-    return {"status": "ok", "message": "Level-Up API 서버 실행 중"}
+    return {"status": "ok", "message": "Axis API 서버 실행 중"}
 
 
 @app.get("/health")
