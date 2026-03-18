@@ -199,6 +199,23 @@ async def save_profile(
     return {"message": "프로필이 저장되었습니다.", "nickname": body.nickname}
 
 
+# ─── PUT /onboarding/profile ──────────────────────────────────────
+@router.put("/profile", response_model=dict)
+async def update_profile(
+    body: OnboardingProfileRequest,
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(get_current_user_id),
+):
+    """닉네임 변경 (온보딩 완료 후 프로필 편집용)."""
+    result = await db.execute(select(UserProfile).where(UserProfile.user_id == user_id))
+    profile = result.scalar_one_or_none()
+    if not profile:
+        raise HTTPException(status_code=404, detail="프로필이 없습니다.")
+    profile.nickname = body.nickname
+    await db.commit()
+    return {"message": "닉네임이 변경되었습니다.", "nickname": body.nickname}
+
+
 # ─── POST /onboarding/keywords ────────────────────────────────────
 @router.post("/keywords", response_model=dict)
 async def save_keywords(

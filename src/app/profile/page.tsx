@@ -1,17 +1,35 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Settings, Bell, BellOff, Share2, ChevronRight, Trophy, Target, Flame, Check, Pencil } from 'lucide-react';
-import { statsAPI, routinesAPI, historyAPI } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { Settings, Bell, BellOff, Share2, ChevronRight, Trophy, Target, Flame, Check, Pencil, X } from 'lucide-react';
+import { statsAPI, routinesAPI, historyAPI, onboardingAPI } from '@/lib/api';
 import { subscribePush, unsubscribePush, isPushSubscribed } from '@/lib/push';
+import { useAuth } from '@/lib/auth-context';
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const { user, signOut } = useAuth();
+
   const [editingName, setEditingName] = useState(false);
-  const [nickname, setNickname] = useState('나의 닉네임');
+  const [nickname, setNickname] = useState('');
   const [draftName, setDraftName] = useState('');
+  const [nicknameLoading, setNicknameLoading] = useState(true);
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // 닉네임 로드
+  useEffect(() => {
+    onboardingAPI.getStatus().then(data => {
+      setNickname(data.nickname || '나의 닉네임');
+    }).catch(() => {
+      setNickname('나의 닉네임');
+    }).finally(() => {
+      setNicknameLoading(false);
+    });
+  }, []);
 
   // 현재 구독 상태 확인
   useEffect(() => {
@@ -58,7 +76,19 @@ export default function ProfilePage() {
   const habitsFormed = history.filter(h => h.event_type === 'habit_formed').length;
 
   const startEdit = () => { setDraftName(nickname); setEditingName(true); };
-  const confirmEdit = () => { if (draftName.trim()) setNickname(draftName.trim()); setEditingName(false); };
+  const confirmEdit = async () => {
+    const trimmed = draftName.trim();
+    if (trimmed) {
+      try {
+        await onboardingAPI.updateProfile(trimmed);
+        setNickname(trimmed);
+      } catch {
+        // 실패해도 로컬 상태는 유지
+        setNickname(trimmed);
+      }
+    }
+    setEditingName(false);
+  };
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white px-5 pt-8">
@@ -66,7 +96,11 @@ export default function ProfilePage() {
       {/* 헤더 */}
       <header className="flex items-center justify-between mb-8">
         <h1 className="text-xl font-black">프로필</h1>
-        <button className="p-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="p-2 rounded-xl"
+          style={{ background: 'rgba(255,255,255,0.05)' }}
+        >
           <Settings size={18} className="text-gray-400" />
         </button>
       </header>
@@ -89,7 +123,9 @@ export default function ProfilePage() {
           <div className="flex-1 min-w-0">
             <p className="text-[11px] text-blue-400 font-semibold tracking-wider mb-0.5">LEVEL {level}</p>
             {/* 닉네임 인라인 편집 */}
-            {editingName ? (
+            {nicknameLoading ? (
+              <div className="h-7 w-32 bg-gray-800 rounded animate-pulse" />
+            ) : editingName ? (
               <div className="flex items-center gap-2">
                 <input
                   autoFocus
@@ -110,6 +146,9 @@ export default function ProfilePage() {
                   <Pencil size={13} className="text-gray-600" />
                 </button>
               </div>
+            )}
+            {user?.email && (
+              <p className="text-xs text-gray-500 mt-0.5 truncate">{user.email}</p>
             )}
             <p className="text-xs text-gray-500">{todayRoutines.length}개 루틴 운영 중</p>
           </div>
@@ -200,6 +239,7 @@ export default function ProfilePage() {
         </button>
 
         <button
+          onClick={() => router.push('/community')}
           className="w-full flex items-center gap-3 p-4 rounded-2xl transition-all active:scale-[0.98]"
           style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.05)' }}
         >
@@ -208,6 +248,59 @@ export default function ProfilePage() {
           <ChevronRight size={15} className="text-gray-700" />
         </button>
       </section>
+
+      {/* 설정 시트 */}
+      {settingsOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center"
+          style={{ background: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setSettingsOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-t-3xl p-6 pb-10"
+            style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.07)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* 헤더 */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-black">설정</h2>
+              <button onClick={() => setSettingsOpen(false)} className="p-1">
+                <X size={20} className="text-gray-400" />
+              </button>
+            </div>
+
+            {/* 계정 섹션 */}
+            <div className="mb-6">
+              <p className="text-xs text-gray-500 font-semibold tracking-wider mb-3">계정</p>
+              <div
+                className="rounded-2xl p-4"
+                style={{ background: '#0a0a0c', border: '1px solid rgba(255,255,255,0.07)' }}
+              >
+                <p className="text-xs text-gray-500 mb-0.5">이메일</p>
+                <p className="text-sm text-white">{user?.email ?? '—'}</p>
+              </div>
+            </div>
+
+            {/* 로그아웃 */}
+            <button
+              onClick={signOut}
+              className="w-full p-4 rounded-2xl text-sm font-semibold transition-all active:scale-[0.98] mb-3"
+              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444' }}
+            >
+              로그아웃
+            </button>
+
+            {/* 닫기 */}
+            <button
+              onClick={() => setSettingsOpen(false)}
+              className="w-full p-4 rounded-2xl text-sm font-semibold transition-all active:scale-[0.98]"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', color: '#9ca3af' }}
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

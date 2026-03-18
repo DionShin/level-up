@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite+aiosqlite:///./level_up.db"
     CORS_ORIGINS: str = "http://localhost:3000"
     DEFAULT_USER_ID: str = "user_001"
+    SUPABASE_URL: str = ""
 
     # VAPID 키 (pywebpush 푸시 알림용)
     # 생성: python -c "from py_vapid import Vapid; v=Vapid(); v.generate_keys(); print(v.public_key, v.private_key)"

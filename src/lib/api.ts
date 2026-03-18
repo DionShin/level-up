@@ -112,6 +112,8 @@ export const onboardingAPI = {
     fetchAPI<{ message: string }>('/onboarding/complete', { method: 'POST' }),
   getStatus: () =>
     fetchAPI<{ completed: boolean; nickname: string }>('/onboarding/status'),
+  updateProfile: (nickname: string) =>
+    fetchAPI<{ message: string; nickname: string }>('/onboarding/profile', { method: 'PUT', body: JSON.stringify({ nickname }) }),
 };
 
 // ─── News API ─────────────────────────────────────────────────────
