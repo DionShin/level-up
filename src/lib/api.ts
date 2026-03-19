@@ -34,6 +34,10 @@ async function fetchAPI<T>(path: string, options?: RequestInit): Promise<T> {
 export const statsAPI = {
   getAll: () => fetchAPI<StatResponse[]>('/stats/'),
   getOne: (id: string) => fetchAPI<StatResponse>(`/stats/${id}`),
+  create: (body: { name: string; icon: string; color: string }) =>
+    fetchAPI<StatResponse>('/stats/', { method: 'POST', body: JSON.stringify(body) }),
+  deleteStat: (id: string) =>
+    fetchAPI<void>(`/stats/${id}`, { method: 'DELETE' }),
 };
 
 // ─── Categories API ───────────────────────────────────────────────

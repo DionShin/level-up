@@ -11,6 +11,12 @@ from pydantic import BaseModel, ConfigDict
 
 
 # ─── Stat ─────────────────────────────────────────────────────────
+class StatCreate(BaseModel):
+    name: str
+    icon: str = "⭐"
+    color: str = "#3b82f6"
+
+
 class StatResponse(BaseModel):
     id: str
     user_id: str

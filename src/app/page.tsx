@@ -1,7 +1,8 @@
 'use client';
 
-import { Bell, ChevronRight, Flame, TrendingUp, BookOpen, ExternalLink, Play, LogOut } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { Bell, ChevronRight, Flame, TrendingUp, BookOpen, ExternalLink, Play, LogOut, X, Trash2 } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import StatRadarChart from '@/components/StatRadarChart';
 import { statsAPI, routinesAPI, newsAPI, type StatResponse, type NewsArticle } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
@@ -114,6 +115,26 @@ function ShortsCard({ article }: { article: NewsArticle }) {
 // ─── 메인 대시보드 ────────────────────────────────────────────────
 export default function Dashboard() {
   const { signOut } = useAuth();
+  const [statSheetOpen, setStatSheetOpen] = useState(false);
+  const [newStatName, setNewStatName] = useState('');
+  const [newStatIcon, setNewStatIcon] = useState('⭐');
+  const [newStatColor, setNewStatColor] = useState('#3b82f6');
+  const [statError, setStatError] = useState('');
+
+  const queryClient = useQueryClient();
+
+  const createStatMutation = useMutation({
+    mutationFn: () => statsAPI.create({ name: newStatName.trim(), icon: newStatIcon, color: newStatColor }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['stats'] }); setNewStatName(''); setStatError(''); },
+    onError: (e: any) => setStatError(e.message ?? '추가 실패'),
+  });
+
+  const deleteStatMutation = useMutation({
+    mutationFn: (id: string) => statsAPI.deleteStat(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['stats'] }),
+    onError: (e: any) => setStatError(e.message ?? '삭제 실패'),
+  });
+
   const { data: stats = [], isLoading: statsLoading } = useQuery({
     queryKey: ['stats'],
     queryFn: statsAPI.getAll,
@@ -191,7 +212,16 @@ export default function Dashboard() {
 
       {/* 중앙: 오각형 레이더 차트 */}
       <section className="mb-5">
-        <p className="text-[10px] text-gray-600 text-center mb-3 tracking-wider">꼭짓점을 탭해서 스탯 관리</p>
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <p className="text-[10px] text-gray-600 tracking-wider">꼭짓점을 탭해서 스탯 관리</p>
+          <button
+            onClick={() => { setStatSheetOpen(true); setStatError(''); }}
+            className="text-[10px] text-blue-400 font-semibold px-2 py-0.5 rounded-full"
+            style={{ background: 'rgba(59,130,246,0.1)' }}
+          >
+            편집
+          </button>
+        </div>
         <div
           className="w-full aspect-square rounded-[2rem] flex items-center justify-center"
           style={{
@@ -312,6 +342,116 @@ export default function Dashboard() {
             ))}
           </div>
         </section>
+      )}
+      {/* 스탯 편집 시트 */}
+      {statSheetOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center"
+          style={{ background: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setStatSheetOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-t-3xl p-6 pb-10 max-h-[80vh] overflow-y-auto"
+            style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.07)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-black">스탯 편집</h2>
+              <button onClick={() => setStatSheetOpen(false)}>
+                <X size={20} className="text-gray-400" />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 mb-3">현재 {stats.length}개 · 최소 3개 · 최대 8개</p>
+
+            {/* 현재 스탯 목록 */}
+            <div className="space-y-2 mb-6">
+              {stats.map(stat => (
+                <div
+                  key={stat.id}
+                  className="flex items-center gap-3 p-3 rounded-2xl"
+                  style={{ background: '#0a0a0c', border: '1px solid rgba(255,255,255,0.05)' }}
+                >
+                  <span className="text-lg">{stat.icon}</span>
+                  <span className="text-sm font-semibold flex-1">{stat.name}</span>
+                  <span className="text-xs font-bold" style={{ color: stat.color }}>{Math.round(stat.score)}</span>
+                  <button
+                    onClick={() => deleteStatMutation.mutate(stat.id)}
+                    disabled={stats.length <= 3 || deleteStatMutation.isPending}
+                    className="p-1.5 rounded-lg transition-all disabled:opacity-30"
+                    style={{ background: 'rgba(239,68,68,0.1)' }}
+                  >
+                    <Trash2 size={13} className="text-red-400" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* 새 스탯 추가 */}
+            {stats.length < 8 && (
+              <div
+                className="rounded-2xl p-4 space-y-3"
+                style={{ background: '#0a0a0c', border: '1px solid rgba(255,255,255,0.05)' }}
+              >
+                <p className="text-xs font-semibold text-gray-400">새 스탯 추가</p>
+
+                {/* 이모지 아이콘 선택 */}
+                <div className="flex flex-wrap gap-2">
+                  {['💪','🧠','💰','❤️','🎯','⚡','📚','🌟','🔥','🏆'].map(emoji => (
+                    <button
+                      key={emoji}
+                      onClick={() => setNewStatIcon(emoji)}
+                      className="w-9 h-9 rounded-xl text-lg transition-all"
+                      style={{
+                        background: newStatIcon === emoji ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)',
+                        border: newStatIcon === emoji ? '1px solid #3b82f6' : '1px solid transparent',
+                      }}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 색상 선택 */}
+                <div className="flex gap-2">
+                  {['#3b82f6','#8b5cf6','#ef4444','#f59e0b','#10b981','#ec4899','#06b6d4','#f97316'].map(color => (
+                    <button
+                      key={color}
+                      onClick={() => setNewStatColor(color)}
+                      className="w-7 h-7 rounded-full transition-all"
+                      style={{
+                        background: color,
+                        border: newStatColor === color ? '2px solid white' : '2px solid transparent',
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* 이름 입력 */}
+                <input
+                  type="text"
+                  value={newStatName}
+                  onChange={e => setNewStatName(e.target.value)}
+                  placeholder="스탯 이름 (예: 창의력)"
+                  maxLength={10}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm text-white placeholder-gray-600 outline-none"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                />
+
+                {statError && <p className="text-xs text-red-400">{statError}</p>}
+
+                <button
+                  onClick={() => createStatMutation.mutate()}
+                  disabled={!newStatName.trim() || createStatMutation.isPending}
+                  className="w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-40"
+                  style={{ background: '#3b82f6', color: '#fff' }}
+                >
+                  {createStatMutation.isPending ? '추가 중...' : `${newStatIcon} ${newStatName || '스탯'} 추가`}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </main>
   );
