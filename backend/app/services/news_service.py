@@ -73,14 +73,21 @@ SAMPLE_NEWS = [
 ]
 
 
-async def fetch_news(category: str | None = None, page_size: int = 10) -> list[dict]:
+async def fetch_news(
+    category: str | None = None,
+    page_size: int = 10,
+    user_keywords: list[str] | None = None,
+) -> list[dict]:
     """
     뉴스 목록 반환.
 
+    user_keywords가 있으면 해당 키워드로 개인화 검색.
+    없으면 기본 키워드(재테크/자기계발) 사용.
+
     category:
-      - "economy"   → 네이버 뉴스 (재테크 경제) + YouTube (재테크 쇼츠)
-      - "knowledge" → 네이버 블로그 (자기계발) + YouTube (자기계발 쇼츠)
-      - "shorts"    → YouTube만 (자기계발 운동 쇼츠)
+      - "economy"   → 네이버 뉴스 + YouTube 쇼츠
+      - "knowledge" → 네이버 블로그 + YouTube 쇼츠
+      - "shorts"    → YouTube만
       - None / "all"→ 세 가지 mix
     """
     from app.core.config import settings
@@ -99,35 +106,46 @@ async def fetch_news(category: str | None = None, page_size: int = 10) -> list[d
             items = [n for n in items if n["category"] == category]
         return items[:page_size]
 
+    # 유저 키워드가 있으면 개인화, 없으면 기본값
+    if user_keywords:
+        # 키워드를 공백으로 합쳐서 검색 (최대 3개)
+        kw_sample = " ".join(user_keywords[:3])
+        economy_query = kw_sample
+        knowledge_query = kw_sample
+        shorts_query = kw_sample + " 쇼츠"
+    else:
+        economy_query = "재테크 경제"
+        knowledge_query = "자기계발"
+        shorts_query = "자기계발 운동 쇼츠"
+
     results: list[dict] = []
 
     if category == "economy":
         if has_naver:
-            results += await _fetch_naver_news(naver_id, naver_secret, "재테크 경제", "economy", page_size)
+            results += await _fetch_naver_news(naver_id, naver_secret, economy_query, "economy", page_size)
         if has_youtube:
-            results += await _fetch_youtube(youtube_key, "재테크 쇼츠", "economy", max(2, page_size // 3))
+            results += await _fetch_youtube(youtube_key, economy_query + " 쇼츠", "economy", max(2, page_size // 3))
 
     elif category == "knowledge":
         if has_naver:
-            results += await _fetch_naver_blog(naver_id, naver_secret, "자기계발", "knowledge", page_size)
+            results += await _fetch_naver_blog(naver_id, naver_secret, knowledge_query, "knowledge", page_size)
         if has_youtube:
-            results += await _fetch_youtube(youtube_key, "자기계발 쇼츠", "knowledge", max(2, page_size // 3))
+            results += await _fetch_youtube(youtube_key, knowledge_query + " 쇼츠", "knowledge", max(2, page_size // 3))
 
     elif category == "shorts":
         if has_youtube:
-            results += await _fetch_youtube(youtube_key, "자기계발 운동 쇼츠", "shorts", page_size)
+            results += await _fetch_youtube(youtube_key, shorts_query, "shorts", page_size)
         else:
-            # YouTube 키 없으면 샘플 shorts 반환
             return [n for n in SAMPLE_NEWS if n["category"] == "shorts"][:page_size]
 
     else:
         # all / None: 세 소스 mix
         per = max(2, page_size // 3)
         if has_naver:
-            results += await _fetch_naver_news(naver_id, naver_secret, "재테크 경제", "economy", per)
-            results += await _fetch_naver_blog(naver_id, naver_secret, "자기계발", "knowledge", per)
+            results += await _fetch_naver_news(naver_id, naver_secret, economy_query, "economy", per)
+            results += await _fetch_naver_blog(naver_id, naver_secret, knowledge_query, "knowledge", per)
         if has_youtube:
-            results += await _fetch_youtube(youtube_key, "자기계발 운동 쇼츠", "shorts", per)
+            results += await _fetch_youtube(youtube_key, shorts_query, "shorts", per)
 
     return results[:page_size] if results else SAMPLE_NEWS[:page_size]
 
