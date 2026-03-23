@@ -78,9 +78,8 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isOAuthFlow, setIsOAuthFlow] = useState(false);
 
-  // 이미 로그인된 상태면 step 1(회원가입) 건너뛰고 step 2(키워드)부터
-  // 프로필이 없으면 이메일로 기본 프로필 생성
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) return;
@@ -90,15 +89,9 @@ export default function OnboardingPage() {
           router.replace('/');
           return;
         }
-        setStep(2);
-        if (!status.nickname) {
-          const email = data.session.user.email ?? '사용자';
-          const defaultNickname = email.split('@')[0];
-          await onboardingAPI.saveProfile(defaultNickname);
-          setNickname(defaultNickname);
-        } else {
-          setNickname(status.nickname);
-        }
+        // OAuth 유저: 닉네임 입력 단계(step 1)를 간소화된 모드로 표시
+        setIsOAuthFlow(true);
+        if (status.nickname) setNickname(status.nickname);
       } catch { /* 무시 */ }
     });
   }, []);
@@ -123,6 +116,21 @@ export default function OnboardingPage() {
     pwCheck.number &&
     pwCheck.special &&
     nickname.trim().length > 0;
+
+  // ── Step 1 (OAuth): 닉네임만 저장 후 step 2로 ────────────────────
+  const handleOAuthNickname = async () => {
+    if (!nickname.trim()) return;
+    setLoading(true);
+    setError('');
+    try {
+      await onboardingAPI.saveProfile(nickname.trim());
+      setStep(2);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : '오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ── Step 1: 회원가입 ─────────────────────────────────────────────
   const handleStep1 = async () => {
@@ -232,8 +240,12 @@ export default function OnboardingPage() {
         }
       }
       await onboardingAPI.complete();
-      await supabase.auth.signOut();
-      router.push('/login');
+      if (isOAuthFlow) {
+        router.push('/');
+      } else {
+        await supabase.auth.signOut();
+        router.push('/login');
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : '오류가 발생했습니다.');
     } finally {
@@ -259,8 +271,8 @@ export default function OnboardingPage() {
 
       <StepDots current={step} total={4} />
 
-      {/* ── STEP 1: 계정 만들기 ─────────────────────────────────── */}
-      {step === 1 && (
+      {/* ── STEP 1: 계정 만들기 (이메일) or 닉네임 입력 (OAuth) ────── */}
+      {step === 1 && !isOAuthFlow && (
         <div className="w-full max-w-sm space-y-4">
           <div className="text-center mb-6">
             <h2 className="text-xl font-bold">계정 만들기</h2>
@@ -321,6 +333,36 @@ export default function OnboardingPage() {
             이미 계정이 있나요?{' '}
             <a href="/login" className="text-blue-400 font-semibold">로그인</a>
           </p>
+        </div>
+      )}
+
+      {/* ── STEP 1 (OAuth): 닉네임만 입력 ───────────────────────────── */}
+      {step === 1 && isOAuthFlow && (
+        <div className="w-full max-w-sm space-y-4">
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold">닉네임 설정</h2>
+            <p className="text-sm text-gray-500 mt-1">앱에서 표시될 이름을 입력해주세요</p>
+          </div>
+
+          <input
+            type="text"
+            value={nickname}
+            onChange={e => setNickname(e.target.value)}
+            placeholder="닉네임"
+            className="w-full px-4 py-3.5 rounded-xl text-sm text-white placeholder-gray-600 outline-none"
+            style={inputStyle}
+          />
+
+          {error && <p className="text-xs text-red-400 text-center">{error}</p>}
+
+          <button
+            onClick={handleOAuthNickname}
+            disabled={!nickname.trim() || loading}
+            className="w-full py-3.5 rounded-2xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-40"
+            style={{ background: '#3b82f6', color: '#fff' }}
+          >
+            {loading ? '처리 중...' : '다음'}
+          </button>
         </div>
       )}
 
