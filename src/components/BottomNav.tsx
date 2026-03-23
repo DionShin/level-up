@@ -11,8 +11,12 @@ const NAV_ITEMS = [
   { href: '/profile',    label: '프로필',  icon: User      },
 ];
 
+const HIDE_NAV = ['/login', '/onboarding', '/auth'];
+
 export default function BottomNav() {
   const pathname = usePathname();
+
+  if (HIDE_NAV.some(p => pathname.startsWith(p))) return null;
 
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-[#0a0a0c]/90 backdrop-blur-md border-t border-white/5 z-50">
