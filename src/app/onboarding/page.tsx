@@ -84,9 +84,13 @@ export default function OnboardingPage() {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) return;
-      setStep(2);
       try {
         const status = await onboardingAPI.getStatus();
+        if (status.completed) {
+          router.replace('/');
+          return;
+        }
+        setStep(2);
         if (!status.nickname) {
           const email = data.session.user.email ?? '사용자';
           const defaultNickname = email.split('@')[0];
