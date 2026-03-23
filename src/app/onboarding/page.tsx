@@ -79,20 +79,24 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isOAuthFlow, setIsOAuthFlow] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
-      if (!data.session) return;
+      if (!data.session) {
+        setSessionChecked(true);
+        return;
+      }
       try {
         const status = await onboardingAPI.getStatus();
         if (status.completed) {
           router.replace('/');
           return;
         }
-        // OAuth 유저: 닉네임 입력 단계(step 1)를 간소화된 모드로 표시
         setIsOAuthFlow(true);
         if (status.nickname) setNickname(status.nickname);
       } catch { /* 무시 */ }
+      setSessionChecked(true);
     });
   }, []);
 
@@ -259,6 +263,14 @@ export default function OnboardingPage() {
       {ok ? '✓' : '✗'}
     </span>
   );
+
+  if (!sessionChecked) {
+    return (
+      <main className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
+        <div className="text-gray-600 text-sm animate-pulse">Loading...</div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white flex flex-col items-center justify-center px-6 py-12">
