@@ -53,18 +53,21 @@ async def get_current_user_id(
     token = authorization.split(" ", 1)[1]
 
     try:
-        from jose import jwt, JWTError
+        from jose import jwt
         jwks = get_supabase_jwks()
-        if not jwks:
-            # JWKS 조회 실패 시 서명 검증 없이 클레임만 추출
+        payload = None
+        if jwks:
+            try:
+                payload = jwt.decode(
+                    token,
+                    jwks,
+                    algorithms=["RS256"],
+                    audience="authenticated",
+                )
+            except Exception:
+                pass  # 검증 실패 시 아래에서 unverified로 폴백
+        if payload is None:
             payload = jwt.get_unverified_claims(token)
-        else:
-            payload = jwt.decode(
-                token,
-                jwks,
-                algorithms=["RS256"],
-                audience="authenticated",
-            )
         user_id: str | None = payload.get("sub")
         if not user_id:
             raise HTTPException(status_code=401, detail="유효하지 않은 토큰입니다.")
