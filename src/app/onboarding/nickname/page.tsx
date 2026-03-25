@@ -36,7 +36,7 @@ export default function NicknamePage() {
     setError('');
     try {
       await onboardingAPI.saveProfile(nickname.trim());
-      router.push('/onboarding?from=oauth');
+      router.push('/onboarding');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : '오류가 발생했습니다.');
     } finally {

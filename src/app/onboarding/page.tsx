@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { onboardingAPI } from '@/lib/api';
 
@@ -75,17 +75,20 @@ const inputStyle = {
 // ─── 메인 컴포넌트 ────────────────────────────────────────────────
 export default function OnboardingPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const fromOAuth = searchParams.get('from') === 'oauth';
-  const [step, setStep] = useState(fromOAuth ? 2 : 1);
+  const [step, setStep] = useState<number | null>(null); // null = 세션 확인 중
+  const [isOAuth, setIsOAuth] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // 세션 확인 → OAuth 유저면 step 2, 이메일 유저면 step 1
   useEffect(() => {
-    if (!fromOAuth) return;
-    // OAuth 유저: 이미 프로필 있음, 완료 여부만 체크
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!data.session) { router.replace('/login'); return; }
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        setIsOAuth(true);
+        setStep(2);
+      } else {
+        setStep(1);
+      }
     });
   }, []);
 
@@ -218,7 +221,7 @@ export default function OnboardingPage() {
         }
       }
       await onboardingAPI.complete();
-      if (fromOAuth) {
+      if (isOAuth) {
         router.push('/');
       } else {
         await supabase.auth.signOut();
@@ -237,6 +240,14 @@ export default function OnboardingPage() {
       {ok ? '✓' : '✗'}
     </span>
   );
+
+  if (step === null) {
+    return (
+      <main className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
+        <div className="text-gray-600 text-sm animate-pulse">Loading...</div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white flex flex-col items-center justify-center px-6 py-12">
