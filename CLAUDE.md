@@ -54,13 +54,19 @@
 ## 남은 작업
 
 ### 유저 직접 설정 필요
-1. **카카오 OAuth**: 비즈앱 전환 (사업자 등록 필요) 또는 스킵
-2. **네이버 OAuth**: developers.naver.com 앱 등록 → Vercel에 NAVER_LOGIN_CLIENT_ID, NAVER_LOGIN_CLIENT_SECRET 추가
-3. **앱 아이콘**: icon-192.png, icon-512.png 생성 → `public/icons/` 폴더에 추가 후 git push
+1. **VAPID 키 설정** (푸시 알림 활성화)
+   - Railway에 추가: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
+   - Vercel에 추가: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+   - 값:
+     - PUBLIC: `BPTTfdFazrdnLN-9MjHpWDqUvhvD2jT1b5SH9JX0mGLEvcfpnaCjYisj5w1Ly2BYFjuVZ2voTPkF2QKqtrtaoVw`
+     - PRIVATE: `DjlZyShlwN0s_DnZgO9QgeskpOdLvzZl_7NxbWex9zo`
+2. **카카오 OAuth**: 비즈앱 전환 (사업자 등록 필요) 또는 스킵
+3. **네이버 OAuth**: developers.naver.com 앱 등록 → Vercel에 NAVER_LOGIN_CLIENT_ID, NAVER_LOGIN_CLIENT_SECRET 추가
+4. **앱 아이콘**: icon-192.png, icon-512.png 생성 → `public/icons/` 폴더에 추가 후 git push
 
-### 테스트 필요
-- OAuth 온보딩 플로우 전체 검증 (닉네임 → 키워드 → SNS → 알림 → 메인)
-- 두 계정 간 데이터 격리 확인
+### 완료된 테스트
+- OAuth 온보딩 플로우 전체 검증 ✅ (닉네임 → 키워드 → SNS → 알림 → 메인)
+- 두 계정 간 데이터 격리 ✅
 
 ### 추후 개발
 - Capacitor로 Android APK 빌드 → 플레이스토어 출시
