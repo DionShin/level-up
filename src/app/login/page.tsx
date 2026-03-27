@@ -77,7 +77,6 @@ export default function LoginPage() {
       <div className="mb-12 text-center">
         <div className="text-5xl mb-4">⬡</div>
         <h1 className="text-3xl font-black tracking-tight">AXIS</h1>
-        <p className="text-sm text-gray-500 mt-1">2030 남성 자기관리 플랫폼</p>
       </div>
 
       {/* 매직링크 발송 완료 */}
