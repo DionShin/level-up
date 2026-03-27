@@ -19,7 +19,7 @@ export default function BottomNav() {
   if (HIDE_NAV.some(p => pathname.startsWith(p))) return null;
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-[#0a0a0c]/90 backdrop-blur-md border-t border-white/5 z-50">
+    <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[480px] bg-[#0f1117]/95 backdrop-blur-md border border-white/8 rounded-2xl z-50">
       <div className="flex">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           // 홈은 정확히 '/'일 때만, 나머지는 시작 경로 포함
@@ -28,12 +28,12 @@ export default function BottomNav() {
             <Link
               key={href}
               href={href}
-              className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${
+              className={`flex-1 flex flex-col items-center gap-1.5 py-4 transition-colors ${
                 isActive ? 'text-blue-400' : 'text-gray-600'
               }`}
             >
-              <Icon size={20} strokeWidth={isActive ? 2.5 : 1.5} />
-              <span className="text-[10px] font-medium">{label}</span>
+              <Icon size={22} strokeWidth={isActive ? 2.5 : 1.5} />
+              <span className="text-[11px] font-medium">{label}</span>
             </Link>
           );
         })}

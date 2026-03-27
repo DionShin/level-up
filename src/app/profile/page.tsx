@@ -224,7 +224,7 @@ export default function ProfilePage() {
             : <BellOff size={16} className="text-gray-400" />
           }
           <span className="text-sm flex-1 text-left">
-            {pushLoading ? '처리 중...' : pushEnabled ? '알림 켜짐 (탭하여 해제)' : '알림 받기'}
+            {pushLoading ? '처리 중...' : pushEnabled ? '알림 켜짐' : '알림 받기'}
           </span>
           {/* 토글 스위치 */}
           <div
