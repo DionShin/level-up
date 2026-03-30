@@ -9,12 +9,12 @@ interface Props {
 }
 
 const SIZE = 300;
-const PAD = 70;       // 라벨 여백
-const TOTAL = SIZE + PAD * 2; // 440
-const CX = TOTAL / 2;         // 220
+const PAD = 100;      // 라벨 여백
+const TOTAL = SIZE + PAD * 2; // 500
+const CX = TOTAL / 2;         // 250
 const CY = TOTAL / 2;
-const R = 148;        // 최대 반지름
-const LABEL_R = 190;  // 라벨 반지름
+const R = 195;        // 최대 반지름
+const LABEL_R = 242;  // 라벨 반지름
 
 // n각형 꼭짓점 좌표 계산 (12시 방향부터 시계방향)
 function getVertices(n: number, r: number, cx = CX, cy = CY) {
@@ -98,7 +98,7 @@ export default function StatRadarChart({ stats }: Props) {
         fill="#ffffff"
         fillOpacity={0.1}
         stroke="#ffffff"
-        strokeWidth={2}
+        strokeWidth={2.5}
         strokeLinejoin="round"
         style={{
           transition: animating ? 'all 0.4s cubic-bezier(0.34,1.56,0.64,1)' : 'all 0.6s ease',
@@ -114,7 +114,7 @@ export default function StatRadarChart({ stats }: Props) {
           <circle
             key={i}
             cx={px} cy={py}
-            r={4}
+            r={5}
             fill="#ffffff"
             style={{ transition: 'all 0.4s ease' }}
           />
@@ -143,17 +143,17 @@ export default function StatRadarChart({ stats }: Props) {
             style={{ cursor: 'pointer' }}
           >
             <rect
-              x={lv.x - 32}
-              y={lv.y - 18}
-              width={64}
-              height={36}
+              x={lv.x - 56}
+              y={lv.y - 30}
+              width={112}
+              height={56}
               fill="transparent"
             />
             <text
               x={lv.x}
-              y={lv.y - 4}
+              y={lv.y - 5}
               textAnchor="middle"
-              fontSize={11}
+              fontSize={22}
               fontWeight="700"
               fill="rgba(255,255,255,0.9)"
             >
@@ -161,9 +161,9 @@ export default function StatRadarChart({ stats }: Props) {
             </text>
             <text
               x={lv.x}
-              y={lv.y + 10}
+              y={lv.y + 16}
               textAnchor="middle"
-              fontSize={10}
+              fontSize={18}
               fill="rgba(255,255,255,0.38)"
             >
               {Math.round(stat.score)}

@@ -213,18 +213,15 @@ export default function Dashboard() {
       {/* 구분선 */}
       <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)', margin: '0 0 24px' }} />
 
-      {/* 중앙: 오각형 레이더 차트 */}
-      <section className="mb-5">
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <p className="text-[10px] text-gray-600 tracking-wider">꼭짓점을 탭해서 스탯 관리</p>
-          <button
-            onClick={() => { setStatSheetOpen(true); setStatError(''); }}
-            className="text-[10px] text-white font-semibold px-2 py-0.5 rounded-full"
-            style={{ background: 'rgba(255,255,255,0.08)' }}
-          >
-            편집
-          </button>
-        </div>
+      {/* 중앙: 레이더 차트 — 풀 블리드, 편집 버튼 우상단 */}
+      <section className="mb-2 -mx-5 relative">
+        <button
+          onClick={() => { setStatSheetOpen(true); setStatError(''); }}
+          className="absolute right-5 top-3 z-10 text-[11px] text-white font-semibold px-3 py-1 rounded-full"
+          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
+        >
+          편집
+        </button>
         <div className="w-full">
           <StatRadarChart stats={stats.map(toChartStat)} />
         </div>
