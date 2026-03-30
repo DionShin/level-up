@@ -13,8 +13,8 @@ const PAD = 100;      // 라벨 여백
 const TOTAL = SIZE + PAD * 2; // 500
 const CX = TOTAL / 2;         // 250
 const CY = TOTAL / 2;
-const R = 195;        // 최대 반지름
-const LABEL_R = 242;  // 라벨 반지름
+const R = 168;        // 최대 반지름
+const LABEL_R = 215;  // 라벨 반지름
 
 // n각형 꼭짓점 좌표 계산 (12시 방향부터 시계방향)
 function getVertices(n: number, r: number, cx = CX, cy = CY) {
@@ -153,7 +153,7 @@ export default function StatRadarChart({ stats }: Props) {
               x={lv.x}
               y={lv.y - 5}
               textAnchor="middle"
-              fontSize={22}
+              fontSize={15}
               fontWeight="700"
               fill="rgba(255,255,255,0.9)"
             >
@@ -163,7 +163,7 @@ export default function StatRadarChart({ stats }: Props) {
               x={lv.x}
               y={lv.y + 16}
               textAnchor="middle"
-              fontSize={18}
+              fontSize={13}
               fill="rgba(255,255,255,0.38)"
             >
               {Math.round(stat.score)}
