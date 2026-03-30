@@ -9,7 +9,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 30 * 1000,      // 30초 캐시
+        staleTime: 5 * 60 * 1000,  // 5분 캐시
+        gcTime: 10 * 60 * 1000,    // 10분간 메모리 유지
         retry: 1,
       },
     },
