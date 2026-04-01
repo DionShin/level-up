@@ -230,7 +230,7 @@ export default function OnboardingPage() {
             onKeyDown={async e => {
               if (e.key === 'Enter' && customName.trim()) {
                 setRecommended(prev => [...prev, { name: customName.trim(), category: goalCat, frequency_type: 'daily' }]);
-                setSelected(prev => new Set([...prev, recommended.length]));
+                setSelected(prev => new Set([...Array.from(prev), recommended.length]));
                 setCustomName('');
               }
             }}
