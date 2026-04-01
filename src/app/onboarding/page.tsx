@@ -244,7 +244,7 @@ export default function OnboardingPage() {
           onClick={async () => {
             setLoading(true);
             try {
-              const toCreate = [...selected].map(i => ({
+              const toCreate = Array.from(selected).map(i => ({
                 name: recommended[i].name,
                 category: recommended[i].category,
                 frequency_type: recommended[i].frequency_type,
